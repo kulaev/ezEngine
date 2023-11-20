@@ -2,7 +2,7 @@ HeaderV2
 {
 o
 {
-	Uuid %id{u4{12166247825455026582,5232126330513722895}}
+	Uuid %id{u4{3991939179971490983,4649842305595049797}}
 	s %t{"ezAssetDocumentInfo"}
 	u3 %v{2}
 	s %n{"Header"}
@@ -11,16 +11,16 @@ o
 		s %AssetType{"Animation Clip"}
 		VarArray %Dependencies
 		{
-			s{"Animations/Pete/Pete.glb"}
+			s{"Assets/Quaternius/Swat.gltf"}
 		}
-		Uuid %DocumentID{u4{12166247825455026582,5232126330513722895}}
-		u4 %Hash{17335770046775431096}
+		Uuid %DocumentID{u4{3991939179971490983,4649842305595049797}}
+		u4 %Hash{14470702513482502466}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps{}
 		VarArray %References
 		{
-			s{"Animations/Pete/Pete.glb"}
+			s{"Assets/Quaternius/Swat.gltf"}
 		}
 	}
 }
@@ -29,46 +29,47 @@ Objects
 {
 o
 {
-	Uuid %id{u4{4022452099131486005,1749318539293908464}}
-	s %t{"ezEventTrackData"}
-	u3 %v{3}
-	p
-	{
-		VarArray %ControlPoints{}
-	}
-}
-o
-{
-	Uuid %id{u4{1975991275177461406,5756401803323039502}}
+	Uuid %id{u4{7577414125486176121,4704577964091810048}}
 	s %t{"ezAnimationClipAssetProperties"}
 	u3 %v{3}
 	p
 	{
-		b %Additive{1}
+		b %Additive{0}
 		VarArray %AvailableClips
 		{
-			s{"Gun Hold Pose"}
-			s{"Gun Point Pose"}
-			s{"Gun Shoot"}
-			s{"Idle Breath"}
-			s{"Idle_Pose"}
-			s{"Jump"}
-			s{"Rest Pose"}
+			s{"Death"}
+			s{"Gun_Shoot"}
+			s{"HitRecieve"}
+			s{"HitRecieve_2"}
+			s{"Idle"}
+			s{"Idle_Gun"}
+			s{"Idle_Gun_Pointing"}
+			s{"Idle_Gun_Shoot"}
+			s{"Idle_Neutral"}
+			s{"Idle_Sword"}
+			s{"Interact"}
+			s{"Kick_Left"}
+			s{"Kick_Right"}
+			s{"Punch_Left"}
+			s{"Punch_Right"}
+			s{"Roll"}
 			s{"Run"}
-			s{"Step Backwards"}
-			s{"Step Left"}
-			s{"Step Right"}
+			s{"Run_Back"}
+			s{"Run_Left"}
+			s{"Run_Right"}
+			s{"Run_Shoot"}
+			s{"Sword_Slash"}
 			s{"Walk"}
 			s{"Wave"}
 		}
 		Vec3 %ConstantRootMotion{f{0,0,0}}
-		Uuid %EventTrack{u4{4022452099131486005,1749318539293908464}}
-		s %File{"Animations/Pete/Pete.glb"}
+		Uuid %EventTrack{u4{16192097021451478241,17756426710326492860}}
+		s %File{"Assets/Quaternius/Swat.gltf"}
 		u3 %FirstFrame{0}
-		u3 %NumFrames{0}
-		s %PreviewMesh{"{ 6240a925-6584-48c5-8559-6981f5d9bedd }"}
+		u3 %NumFrames{1}
+		s %PreviewMesh{"{ 95d27ddc-19e0-4921-8f15-6db4850cbe8a }"}
 		s %RootMotion{"ezRootMotionSource::None"}
-		s %UseAnimationClip{"Wave"}
+		s %UseAnimationClip{"Idle_Gun_Pointing"}
 	}
 }
 o
@@ -81,8 +82,18 @@ o
 	{
 		VarArray %Children
 		{
-			Uuid{u4{1975991275177461406,5756401803323039502}}
+			Uuid{u4{7577414125486176121,4704577964091810048}}
 		}
+	}
+}
+o
+{
+	Uuid %id{u4{16192097021451478241,17756426710326492860}}
+	s %t{"ezEventTrackData"}
+	u3 %v{3}
+	p
+	{
+		VarArray %ControlPoints{}
 	}
 }
 }
