@@ -548,29 +548,31 @@ ezUInt32 ezShadowPool::AddDirectionalLight(const ezDirectionalLightComponent* pD
       center.z = ezMath::Clamp(center.z, -1000000.0f, +1000000.0f);
 
       endCorner.z -= x;
-      float radius = endCorner.GetLength();
+      const float radius = endCorner.GetLength();
 
-      if (false)
-      {
-        ezDebugRenderer::DrawLineSphere(pReferenceView->GetHandle(), ezBoundingSphere::MakeFromCenterAndRadius(center, radius), ezColor::OrangeRed);
-      }
-
-      float fCameraToCenterDistance = radius + fNearPlaneOffset;
-      ezVec3 shadowCameraPos = center - vLightDirForwards * fCameraToCenterDistance;
-      float fFarPlane = radius + fCameraToCenterDistance;
+      const float fCameraToCenterDistance = radius + fNearPlaneOffset;
+      const ezVec3 shadowCameraPos = center - vLightDirForwards * fCameraToCenterDistance;
+      const float fFarPlane = radius + fCameraToCenterDistance;
 
       ezCamera& camera = shadowView.m_Camera;
       camera.LookAt(shadowCameraPos, center, vLightDirUp);
       camera.SetCameraMode(ezCameraMode::OrthoFixedWidth, radius * 2.0f, 0.0f, fFarPlane);
 
       // stabilize
-      ezMat4 worldToLightMatrix = pView->GetViewMatrix(ezCameraEye::Left);
+      const ezMat4 worldToLightMatrix = pView->GetViewMatrix(ezCameraEye::Left);
+      const float texelInWorld = (2.0f * radius) / cvar_RenderingShadowsMaxShadowMapSize;
       ezVec3 offset = worldToLightMatrix.TransformPosition(ezVec3::MakeZero());
-      float texelInWorld = (2.0f * radius) / cvar_RenderingShadowsMaxShadowMapSize;
       offset.x -= ezMath::Floor(offset.x / texelInWorld) * texelInWorld;
       offset.y -= ezMath::Floor(offset.y / texelInWorld) * texelInWorld;
 
       camera.MoveLocally(0.0f, offset.x, offset.y);
+
+      if (false)
+      {
+        ezDebugRenderer::DrawLineSphere(pReferenceView->GetHandle(), ezBoundingSphere::MakeFromCenterAndRadius(center, radius), ezColor::OrangeRed);
+
+        ezDebugRenderer::DrawLineSphere(pReferenceView->GetHandle(), ezBoundingSphere::MakeFromCenterAndRadius(ezVec3(0, 0, fCameraToCenterDistance), radius), ezColor::OrangeRed, ezTransform::MakeFromMat4(camera.GetViewMatrix().GetInverse()));
+      }
     }
 
     ezRenderWorld::AddViewToRender(shadowView.m_hView);
@@ -927,7 +929,7 @@ void ezShadowPool::OnExtractionEvent(const ezRenderWorldExtractionEvent& e)
 
         ezUInt32 uiParams2Index = GET_SHADOW_PARAMS2_INDEX(shadowData.m_uiPackedDataOffset);
         ezVec4& shadowParams2 = packedShadowData[uiParams2Index];
-        shadowParams2.x = 1.0f - (ezMath::Max(penumbraSize, goodPenumbraSize) + texelSize) * 2.0f;
+        shadowParams2.x = 1.0f - ezMath::Max(penumbraSize, goodPenumbraSize);
         shadowParams2.y = ditherMultiplier;
         shadowParams2.z = ditherMultiplier * zRange;
         shadowParams2.w = penumbraSizeIncrement * relativeShadowSize;
