@@ -11,6 +11,8 @@ ez_create_target(LIBRARY ${PROJECT_NAME} NO_EZ_PREFIX ALL_SYMBOLS_VISIBLE)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC BUILDSYSTEM_ENABLE_OZZ_SUPPORT)
 
+
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE OZZ_BUILD_BASE_LIB)
@@ -20,6 +22,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE OZZ_BUILD_ANIMOFFLINE_LIB)
 target_compile_definitions(${PROJECT_NAME} PRIVATE OZZ_BUILD_ANIMATIONTOOLS_LIB)
 target_compile_definitions(${PROJECT_NAME} PRIVATE OZZ_BUILD_ANIMATIONFBX_LIB)
 target_compile_definitions(${PROJECT_NAME} PRIVATE OZZ_BUILD_OPTIONS_LIB)
+target_compile_definitions(${PROJECT_NAME} PRIVATE OZZ_BUILD_SIMD_REF)
 
 if(EZ_CMAKE_COMPILER_MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE /wd4661)
