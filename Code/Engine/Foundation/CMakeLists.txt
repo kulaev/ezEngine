@@ -60,6 +60,11 @@ if (EZ_3RDPARTY_ZSTD_SUPPORT)
 
 endif()
 
+if (EZ_3RDPARTY_ZLIB_SUPPORT)
+
+  target_link_libraries(${PROJECT_NAME} PUBLIC zlib)
+
+endif()
 
 if(EZ_3RDPARTY_GLFW_SUPPORT)
 

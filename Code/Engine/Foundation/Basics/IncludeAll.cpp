@@ -49,6 +49,7 @@
 #include <Foundation/Containers/StaticRingBuffer.h>
 
 #include <Foundation/IO/ChunkStream.h>
+#include <Foundation/IO/CompressedStreamZlib.h>
 #include <Foundation/IO/CompressedStreamZstd.h>
 #include <Foundation/IO/DeduplicationReadContext.h>
 #include <Foundation/IO/DeduplicationWriteContext.h>
