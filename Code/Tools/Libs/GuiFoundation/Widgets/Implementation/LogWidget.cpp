@@ -5,6 +5,8 @@
 #include <QClipboard>
 #include <QKeyEvent>
 
+ezMap<ezString,ezQtLogWidget::LogItemContextActionCallback> ezQtLogWidget::s_LogCallbacks;
+
 ezQtLogWidget::ezQtLogWidget(QWidget* pParent)
   : QWidget(pParent)
 {
@@ -14,6 +16,8 @@ ezQtLogWidget::ezQtLogWidget(QWidget* pParent)
   ListViewLog->setModel(m_pLog);
   ListViewLog->setUniformItemSizes(true);
   ListViewLog->installEventFilter(this);
+  connect(ListViewLog, &QAbstractItemView::doubleClicked, this, &ezQtLogWidget::OnItemDoubleClicked);
+
   connect(m_pLog, &QAbstractItemModel::rowsInserted, this, [this](const QModelIndex& parent, int iFirst, int iLast) { ScrollToBottomIfAtEnd(iFirst); });
 
   const int logIndex = ((int)ezLogMsgType::All - (int)ezLogMsgType::InfoMsg);
@@ -91,6 +95,26 @@ bool ezQtLogWidget::eventFilter(QObject* pObject, QEvent* pEvent)
   return false;
 }
 
+bool ezQtLogWidget::AddLogItemContextActionCallback(const ezStringView& sName,const LogItemContextActionCallback& logCallback)
+{
+  if(sName.IsEmpty())
+    return false;
+
+  if(s_LogCallbacks.Contains(sName))
+    return false;
+
+  s_LogCallbacks[sName] = logCallback;
+  return true;
+}
+
+bool ezQtLogWidget::RemoveLogItemContextActionCallback(const ezStringView& sName)
+{
+  if(sName.IsEmpty())
+    return false;
+
+  return s_LogCallbacks.Remove(sName);
+}
+
 void ezQtLogWidget::ScrollToBottomIfAtEnd(int iNumElements)
 {
   if (ListViewLog->selectionModel()->hasSelection())
@@ -119,4 +143,14 @@ void ezQtLogWidget::on_ComboFilter_currentIndexChanged(int index)
 {
   const ezLogMsgType::Enum LogLevel = (ezLogMsgType::Enum)((int)ezLogMsgType::All - index);
   m_pLog->SetLogLevel(LogLevel);
+}
+
+void ezQtLogWidget::OnItemDoubleClicked(QModelIndex idx)
+{
+  const ezString sLine(m_pLog->data(idx, Qt::DisplayRole).toString().toUtf8().data());
+
+  for(auto const& callback : s_LogCallbacks)
+  {
+    callback.Value()(sLine);
+  }
 }
