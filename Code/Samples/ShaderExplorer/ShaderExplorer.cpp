@@ -1,5 +1,6 @@
 #include <ShaderExplorer/ShaderExplorer.h>
 
+#include <RendererVulkan/Device/DeviceVulkan.h>
 #include <Core/Graphics/Camera.h>
 #include <Core/Graphics/Geometry.h>
 #include <Core/Input/InputManager.h>
@@ -21,6 +22,7 @@
 #include <RendererFoundation/Device/DeviceFactory.h>
 #include <RendererFoundation/Device/SwapChain.h>
 #include <RendererFoundation/Resources/RenderTargetSetup.h>
+#include <Core/Input/VirtualThumbStick.h>
 
 static ezUInt32 g_uiWindowWidth = 640;
 static ezUInt32 g_uiWindowHeight = 480;
@@ -142,7 +144,9 @@ ezApplication::Execution ezShaderExplorerApp::Run()
 
 
   m_bStuffChanged = false;
+#if EZ_ENABLED(EZ_SUPPORTS_DIRECTORY_WATCHER)
   m_pDirectoryWatcher->EnumerateChanges(ezMakeDelegate(&ezShaderExplorerApp::OnFileChanged, this));
+#endif
   if (m_bStuffChanged)
   {
     ezResourceManager::ReloadAllResources(false);
@@ -165,6 +169,7 @@ ezApplication::Execution ezShaderExplorerApp::Run()
     renderingSetup.m_uiRenderTargetClearMask = 0xFFFFFFFF;
     renderingSetup.m_bClearDepth = true;
     renderingSetup.m_bClearStencil = true;
+    renderingSetup.m_ClearColor = ezColor::RebeccaPurple;
 
     ezGALRenderCommandEncoder* pCommandEncoder = ezRenderContext::GetDefaultInstance()->BeginRendering(pGALPass, renderingSetup, ezRectFloat(0.0f, 0.0f, (float)g_uiWindowWidth, (float)g_uiWindowHeight));
 
@@ -208,16 +213,15 @@ void ezShaderExplorerApp::AfterCoreSystemsStartup()
 {
   m_pCamera = EZ_DEFAULT_NEW(ezCamera);
   m_pCamera->LookAt(ezVec3(3, 3, 1.5), ezVec3(0, 0, 0), ezVec3(0, 1, 0));
-  m_pDirectoryWatcher = EZ_DEFAULT_NEW(ezDirectoryWatcher);
 
   ezStringBuilder sProjectDir = ">sdk/Data/Samples/ShaderExplorer";
   ezStringBuilder sProjectDirResolved;
   ezFileSystem::ResolveSpecialDirectory(sProjectDir, sProjectDirResolved).IgnoreResult();
-
   ezFileSystem::SetSpecialDirectory("project", sProjectDirResolved);
-
+#if EZ_ENABLED(EZ_SUPPORTS_DIRECTORY_WATCHER)
+  m_pDirectoryWatcher = EZ_DEFAULT_NEW(ezDirectoryWatcher);
   EZ_VERIFY(m_pDirectoryWatcher->OpenDirectory(sProjectDirResolved, ezDirectoryWatcher::Watch::Writes | ezDirectoryWatcher::Watch::Subdirectories).Succeeded(), "Failed to watch project directory");
-
+#endif
   ezFileSystem::AddDataDirectory("", "", ":", ezFileSystem::AllowWrites).IgnoreResult();
   ezFileSystem::AddDataDirectory(">appdir/", "AppBin", "bin", ezFileSystem::AllowWrites).IgnoreResult();                                   // writing to the binary directory
   ezFileSystem::AddDataDirectory(">appdir/", "ShaderCache", "shadercache", ezFileSystem::AllowWrites).IgnoreResult();                      // for shader files
@@ -229,7 +233,7 @@ void ezShaderExplorerApp::AfterCoreSystemsStartup()
   ezGlobalLog::AddLogWriter(ezLogWriter::Console::LogMessageHandler);
   ezGlobalLog::AddLogWriter(ezLogWriter::VisualStudio::LogMessageHandler);
 
-  ezPlugin::LoadPlugin("ezInspectorPlugin").IgnoreResult();
+  //ezPlugin::LoadPlugin("ezInspectorPlugin").IgnoreResult();
 
 #ifdef BUILDSYSTEM_ENABLE_VULKAN_SUPPORT
   constexpr const char* szDefaultRenderer = "Vulkan";
@@ -243,10 +247,28 @@ void ezShaderExplorerApp::AfterCoreSystemsStartup()
   ezGALDeviceFactory::GetShaderModelAndCompiler(sRendererName, szShaderModel, szShaderCompiler);
 
   ezShaderManager::Configure(szShaderModel, true);
-  EZ_VERIFY(ezPlugin::LoadPlugin(szShaderCompiler).Succeeded(), "Shader compiler '{}' plugin not found", szShaderCompiler);
+  //EZ_VERIFY(ezPlugin::LoadPlugin(szShaderCompiler).Succeeded(), "Shader compiler '{}' plugin not found", szShaderCompiler);
 
   // Register Input
   {
+    {
+      m_pLeftStick = EZ_DEFAULT_NEW(ezVirtualThumbStick);
+      m_pLeftStick->SetInputArea(ezVec2(0, 0), ezVec2(0.5, 1), 0.25f, 1.0f, ezVirtualThumbStick::CenterMode::ActivationPoint);
+      m_pLeftStick->SetTriggerInputSlot(ezVirtualThumbStick::Input::Touchpoint);
+      m_pLeftStick->SetThumbstickOutput(ezVirtualThumbStick::Output::Controller0_LeftStick);
+      m_pLeftStick->SetAreaFocusMode(ezInputActionConfig::OnEnterArea::ActivateImmediately, ezInputActionConfig::OnLeaveArea::KeepFocus);
+      m_pLeftStick->SetEnabled(true);
+    }
+    {
+      m_pRightStick = EZ_DEFAULT_NEW(ezVirtualThumbStick);
+      m_pRightStick->SetInputArea(ezVec2(0.5, 0), ezVec2(1, 1), 0.25f, 1.0f, ezVirtualThumbStick::CenterMode::ActivationPoint);
+      m_pRightStick->SetTriggerInputSlot(ezVirtualThumbStick::Input::Touchpoint);
+      m_pRightStick->SetThumbstickOutput(ezVirtualThumbStick::Output::Controller0_RightStick);
+      m_pRightStick->SetAreaFocusMode(ezInputActionConfig::OnEnterArea::ActivateImmediately, ezInputActionConfig::OnLeaveArea::KeepFocus);
+      m_pRightStick->SetEnabled(true);
+    }
+
+
     ezInputActionConfig cfg;
 
     cfg = ezInputManager::GetInputActionConfig("Main", "CloseApp");
@@ -275,21 +297,25 @@ void ezShaderExplorerApp::AfterCoreSystemsStartup()
 
     cfg = ezInputManager::GetInputActionConfig("Main", "TurnPosX");
     cfg.m_sInputSlotTrigger[0] = ezInputSlot_KeyRight;
+    cfg.m_sInputSlotTrigger[1] = ezInputSlot_Controller0_RightStick_PosX;
     cfg.m_bApplyTimeScaling = true;
     ezInputManager::SetInputActionConfig("Main", "TurnPosX", cfg, true);
 
     cfg = ezInputManager::GetInputActionConfig("Main", "TurnNegX");
     cfg.m_sInputSlotTrigger[0] = ezInputSlot_KeyLeft;
+    cfg.m_sInputSlotTrigger[1] = ezInputSlot_Controller0_RightStick_NegX;
     cfg.m_bApplyTimeScaling = true;
     ezInputManager::SetInputActionConfig("Main", "TurnNegX", cfg, true);
 
     cfg = ezInputManager::GetInputActionConfig("Main", "TurnPosY");
     cfg.m_sInputSlotTrigger[0] = ezInputSlot_KeyDown;
+    cfg.m_sInputSlotTrigger[1] = ezInputSlot_Controller0_RightStick_PosY;
     cfg.m_bApplyTimeScaling = true;
     ezInputManager::SetInputActionConfig("Main", "TurnPosY", cfg, true);
 
     cfg = ezInputManager::GetInputActionConfig("Main", "TurnNegY");
     cfg.m_sInputSlotTrigger[0] = ezInputSlot_KeyUp;
+    cfg.m_sInputSlotTrigger[1] = ezInputSlot_Controller0_RightStick_NegY;
     cfg.m_bApplyTimeScaling = true;
     ezInputManager::SetInputActionConfig("Main", "TurnNegY", cfg, true);
 
@@ -300,21 +326,25 @@ void ezShaderExplorerApp::AfterCoreSystemsStartup()
 
     cfg = ezInputManager::GetInputActionConfig("Main", "MovePosX");
     cfg.m_sInputSlotTrigger[0] = ezInputSlot_KeyD;
+    cfg.m_sInputSlotTrigger[1] = ezInputSlot_Controller0_LeftStick_PosX;
     cfg.m_bApplyTimeScaling = true;
     ezInputManager::SetInputActionConfig("Main", "MovePosX", cfg, true);
 
     cfg = ezInputManager::GetInputActionConfig("Main", "MoveNegX");
     cfg.m_sInputSlotTrigger[0] = ezInputSlot_KeyA;
+    cfg.m_sInputSlotTrigger[1] = ezInputSlot_Controller0_LeftStick_NegX;
     cfg.m_bApplyTimeScaling = true;
     ezInputManager::SetInputActionConfig("Main", "MoveNegX", cfg, true);
 
     cfg = ezInputManager::GetInputActionConfig("Main", "MovePosY");
     cfg.m_sInputSlotTrigger[0] = ezInputSlot_KeyW;
+    cfg.m_sInputSlotTrigger[1] = ezInputSlot_Controller0_LeftStick_PosY;
     cfg.m_bApplyTimeScaling = true;
     ezInputManager::SetInputActionConfig("Main", "MovePosY", cfg, true);
 
     cfg = ezInputManager::GetInputActionConfig("Main", "MoveNegY");
     cfg.m_sInputSlotTrigger[0] = ezInputSlot_KeyS;
+    cfg.m_sInputSlotTrigger[1] = ezInputSlot_Controller0_LeftStick_NegY;
     cfg.m_bApplyTimeScaling = true;
     ezInputManager::SetInputActionConfig("Main", "MoveNegY", cfg, true);
   }
@@ -342,6 +372,8 @@ void ezShaderExplorerApp::AfterCoreSystemsStartup()
     EZ_VERIFY(m_pDevice->Init() == EZ_SUCCESS, "Device init failed!");
 
     ezGALDevice::SetDefaultDevice(m_pDevice);
+
+    ezLog::Warning("{}", static_cast<ezGALDeviceVulkan*>(m_pDevice)->GetExtensions().m_bBorderColorFloat);
   }
 
   // now that we have a window and device, tell the engine to initialize the rendering infrastructure
@@ -360,8 +392,10 @@ void ezShaderExplorerApp::AfterCoreSystemsStartup()
 
 void ezShaderExplorerApp::BeforeHighLevelSystemsShutdown()
 {
+#if EZ_ENABLED(EZ_SUPPORTS_DIRECTORY_WATCHER)
   m_pDirectoryWatcher->CloseDirectory();
-
+  m_pDirectoryWatcher.Clear();
+#endif
   m_pDevice->DestroyTexture(m_hDepthStencilTexture);
   m_hDepthStencilTexture.Invalidate();
 
@@ -383,7 +417,7 @@ void ezShaderExplorerApp::BeforeHighLevelSystemsShutdown()
   EZ_DEFAULT_DELETE(m_pWindow);
 
   m_pCamera.Clear();
-  m_pDirectoryWatcher.Clear();
+
 }
 
 void ezShaderExplorerApp::UpdateSwapChain()
@@ -454,6 +488,7 @@ void ezShaderExplorerApp::CreateScreenQuad()
     m_hQuadMeshBuffer = ezResourceManager::GetOrCreateResource<ezMeshBufferResource>("{E692442B-9E15-46C5-8A00-1B07C02BF8F7}", std::move(desc));
 }
 
+#if EZ_ENABLED(EZ_SUPPORTS_DIRECTORY_WATCHER)
 void ezShaderExplorerApp::OnFileChanged(ezStringView sFilename, ezDirectoryWatcherAction action, ezDirectoryWatcherType type)
 {
   if (action == ezDirectoryWatcherAction::Modified && type == ezDirectoryWatcherType::File)
@@ -462,5 +497,6 @@ void ezShaderExplorerApp::OnFileChanged(ezStringView sFilename, ezDirectoryWatch
     m_bStuffChanged = true;
   }
 }
+#endif
 
 EZ_CONSOLEAPP_ENTRY_POINT(ezShaderExplorerApp);

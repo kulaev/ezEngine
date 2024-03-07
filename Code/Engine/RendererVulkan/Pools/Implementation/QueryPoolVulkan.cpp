@@ -202,3 +202,5 @@ ezQueryPoolVulkan::TimestampPool* ezQueryPoolVulkan::GetFreePool()
   m_resetPools.PushBack(pPool->m_pool);
   return pPool;
 }
+
+

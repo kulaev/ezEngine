@@ -357,3 +357,5 @@ AssetCache
 /build/
 /buildUWP/
 Code/Engine/ezBuildInfo.h
+cmake-build-debug-visual-studio
+workspace-clang

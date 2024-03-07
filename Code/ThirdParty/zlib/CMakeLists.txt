@@ -11,18 +11,14 @@ else()
   ez_create_target(LIBRARY ${PROJECT_NAME} NO_EZ_PREFIX NO_WARNINGS_AS_ERRORS)
 endif()
 
-
 target_compile_definitions(${PROJECT_NAME} PUBLIC BUILDSYSTEM_ENABLE_ZLIB_SUPPORT)
 
-
-if(MSVC)
+if(EZ_CMAKE_PLATFORM_WINDOWS)
   target_compile_definitions(${PROJECT_NAME} PRIVATE WIN32)
 
   if(NOT EZ_CMAKE_PLATFORM_WINDOWS_UWP AND EZ_COMPILE_ENGINE_AS_DLL)
-
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ZLIB_DLL_EXPORT=1)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ZLIB_DLL_IMPORT=1)
-
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ZLIB_INTERNAL=1)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC ZLIB_DLL=1)
   endif()
 
   target_compile_options(${PROJECT_NAME} PRIVATE /wd4131)

@@ -7,7 +7,6 @@ using ezPluginModule = void*;
 
 bool ezPlugin::PlatformNeedsPluginCopy()
 {
-  EZ_ASSERT_NOT_IMPLEMENTED;
   return false;
 }
 

@@ -2,6 +2,7 @@
 
 #if EZ_ENABLED(EZ_PLATFORM_ANDROID)
 
+#  include <Foundation/Logging/Log.h>
 #  include <Foundation/Application/Application.h>
 #  include <Foundation/Application/Implementation/Android/Application_android.h>
 #  include <android/log.h>
@@ -10,7 +11,7 @@
 static void ezAndroidHandleCmd(struct android_app* pApp, int32_t cmd)
 {
   ezAndroidApplication* pAndroidApp = static_cast<ezAndroidApplication*>(pApp->userData);
-  pAndroidApp->HandleCmd(cmd);
+  pAndroidApp->HandleCmd(pApp, cmd);
 }
 
 static int32_t ezAndroidHandleInput(struct android_app* pApp, AInputEvent* pEvent)
@@ -46,6 +47,9 @@ void ezAndroidApplication::AndroidRun()
 
       HandleIdent(iIdent);
     }
+    if (!m_bStarted)
+      continue;
+
     if (bRun && m_pEzApp->Run() != ezApplication::Execution::Continue)
     {
       bRun = false;
@@ -58,15 +62,37 @@ void ezAndroidApplication::AndroidRun()
   }
 }
 
-void ezAndroidApplication::HandleCmd(int32_t cmd)
+void ezAndroidApplication::HandleCmd(struct android_app* pApp, int32_t cmd)
 {
-  //#TODO:
+  switch (cmd)
+  {
+    case APP_CMD_INIT_WINDOW:
+      if (pApp->window != nullptr)
+      {
+        EZ_VERIFY(ezRun_Startup(m_pEzApp).Succeeded(), "");
+        m_bStarted = true;
+
+        int width = ANativeWindow_getWidth(pApp->window);
+        int height = ANativeWindow_getHeight(pApp->window);
+        ezLog::Info("Init Screen: {}x{}", width, height);
+      }
+      break;
+    case APP_CMD_TERM_WINDOW:
+      m_pEzApp->RequestQuit();
+      break;
+    default:
+      break;
+  }
 }
 
 int32_t ezAndroidApplication::HandleInput(AInputEvent* pEvent)
 {
-  //#TODO:
-  return 0;
+  ezAndroidInputEvent event;
+  event.m_pEvent = pEvent;
+  event.m_iReturn = 0;
+
+  ezAndroidUtils::s_InputEvent.Broadcast(event);
+  return event.m_iReturn;
 }
 
 void ezAndroidApplication::HandleIdent(ezInt32 iIdent)
@@ -78,7 +104,7 @@ EZ_FOUNDATION_DLL void ezAndroidRun(struct android_app* pApp, ezApplication* pEz
 {
   ezAndroidApplication androidApp(pApp, pEzApp);
 
-  if (ezRun_Startup(pEzApp).Succeeded())
+  //if (ezRun_Startup(pEzApp).Succeeded())
   {
     androidApp.AndroidRun();
   }

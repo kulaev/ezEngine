@@ -288,6 +288,12 @@ bool ezPlugin::ExistsPluginFile(ezStringView sPluginFile)
 
 ezResult ezPlugin::LoadPlugin(ezStringView sPluginFile, ezBitflags<ezPluginLoadFlags> flags /*= ezPluginLoadFlags::Default*/)
 {
+#if EZ_ENABLED(EZ_PLATFORM_ANDROID)
+  ezPlugin::BeginPluginChanges();
+  EZ_SCOPE_EXIT(ezPlugin::EndPluginChanges());
+
+  return EZ_SUCCESS;
+#endif
   if (flags.IsSet(ezPluginLoadFlags::PluginIsOptional))
   {
     // early out without logging an error

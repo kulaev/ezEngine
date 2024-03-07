@@ -233,6 +233,8 @@ namespace ezDataDirectory
       m_sRedirectedDataDirPath = sDirectory;
     }
 
+    ezOSFile::CreateDirectoryStructure(m_sRedirectedDataDirPath).IgnoreResult();
+
     if (!ezOSFile::ExistsDirectory(m_sRedirectedDataDirPath))
       return EZ_FAILURE;
 

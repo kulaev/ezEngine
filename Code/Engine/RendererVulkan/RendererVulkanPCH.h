@@ -20,7 +20,11 @@
 #  include <vulkan/vulkan_format_traits.hpp>
 #endif
 
-#if VK_HEADER_VERSION < 211
+#if EZ_ENABLED(EZ_PLATFORM_ANDROID)
+#  include <vulkan/vulkan_android.h>
+#endif
+
+#if VK_HEADER_VERSION < 268
 #  error "Your vulkan headers are to old. The headers of SDK 1.3.211 or newer are required"
 #endif
 

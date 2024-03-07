@@ -261,3 +261,7 @@ bool ezFallbackResourcesVulkan::KeyHash::Equal(const Key& a, const Key& b)
 {
   return a.m_ResourceType == b.m_ResourceType && a.m_ezType == b.m_ezType && a.m_bDepth == b.m_bDepth;
 }
+
+
+EZ_STATICLINK_FILE(RendererVulkan, RendererVulkan_Resources_Implementation_FallbackResourcesVulkan);
+

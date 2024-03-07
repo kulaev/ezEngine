@@ -138,5 +138,3 @@ void RemoveGlobalEventHandler()
 }
 
 
-
-EZ_STATICLINK_FILE(InspectorPlugin, InspectorPlugin_GlobalEvents);

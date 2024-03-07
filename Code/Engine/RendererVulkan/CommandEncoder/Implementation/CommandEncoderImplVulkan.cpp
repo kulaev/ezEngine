@@ -1514,3 +1514,5 @@ const ezGALUnorderedAccessViewVulkan* ezGALCommandEncoderImplVulkan::GetShaderUA
   }
   return pUAV;
 }
+
+

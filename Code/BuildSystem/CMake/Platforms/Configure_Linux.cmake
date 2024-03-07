@@ -155,6 +155,7 @@ macro(ez_platformhook_find_vulkan)
     find_package_handle_standard_args(EzVulkan DEFAULT_MSG EZ_VULKAN_DIR)
     
 	if(EZ_CMAKE_ARCHITECTURE_64BIT)
+        message(WARNING "##### LINUX")
 		add_library(EzVulkan::Loader SHARED IMPORTED)
 		set_target_properties(EzVulkan::Loader PROPERTIES IMPORTED_LOCATION "${EZ_VULKAN_DIR}/x86_64/lib/libvulkan.so")
 		set_target_properties(EzVulkan::Loader PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${EZ_VULKAN_DIR}/x86_64/include")

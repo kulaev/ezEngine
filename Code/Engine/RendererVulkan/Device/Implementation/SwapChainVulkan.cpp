@@ -220,6 +220,10 @@ ezResult ezGALSwapChainVulkan::InitPlatform(ezGALDevice* pDevice)
   VkSurfaceKHR glfwSurface = VK_NULL_HANDLE;
   VK_SUCCEED_OR_RETURN_EZ_FAILURE(glfwCreateWindowSurface(m_pVulkanDevice->GetVulkanInstance(), m_WindowDesc.m_pWindow->GetNativeWindowHandle(), nullptr, &glfwSurface));
   m_vulkanSurface = glfwSurface;
+#elif EZ_ENABLED(EZ_PLATFORM_ANDROID)
+  vk::AndroidSurfaceCreateInfoKHR info;
+  info.window = reinterpret_cast<ANativeWindow*>(m_WindowDesc.m_pWindow->GetNativeWindowHandle());
+  VK_SUCCEED_OR_RETURN_EZ_FAILURE(m_pVulkanDevice->GetVulkanInstance().createAndroidSurfaceKHR(&info, nullptr, &m_vulkanSurface));
 #else
 #  error Platform not supported
 #endif
@@ -356,7 +360,7 @@ ezResult ezGALSwapChainVulkan::CreateSwapChainInternal()
   m_swapChainImages.SetCount(uiSwapChainImages);
   VK_SUCCEED_OR_RETURN_EZ_FAILURE(m_pVulkanDevice->GetVulkanDevice().getSwapchainImagesKHR(m_vulkanSwapChain, &uiSwapChainImages, m_swapChainImages.GetData()));
 
-  EZ_ASSERT_DEV(uiSwapChainImages < 4, "If we have more than 3 swap chain images we can't hold ontp fences owned by ezDeviceVulkan::PerFrameData anymore as that reclaims all fences once it reuses the frame data (which is 4 right now). Thus, we can't safely pass in the fence in ezGALSwapChainVulkan::PresentRenderTarget as it will be reclaimed before we use it.");
+  //EZ_ASSERT_DEV(uiSwapChainImages < 4, "If we have more than 3 swap chain images we can't hold ontp fences owned by ezDeviceVulkan::PerFrameData anymore as that reclaims all fences once it reuses the frame data (which is 4 right now). Thus, we can't safely pass in the fence in ezGALSwapChainVulkan::PresentRenderTarget as it will be reclaimed before we use it.");
   m_swapChainImageInUseFences.SetCount(uiSwapChainImages);
 
   for (ezUInt32 i = 0; i < uiSwapChainImages; i++)
@@ -406,4 +410,4 @@ ezResult ezGALSwapChainVulkan::DeInitPlatform(ezGALDevice* pDevice)
   return EZ_SUCCESS;
 }
 
-EZ_STATICLINK_FILE(RendererVulkan, RendererVulkan_Device_Implementation_SwapChainVulkan);
+

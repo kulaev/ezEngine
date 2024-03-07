@@ -111,3 +111,5 @@ void RemoveResourceManagerEventHandler()
   ezResourceManager::GetResourceEvents().RemoveEventHandler(ResourceManagerDetail::ResourceManagerEventHandler);
   ezTelemetry::RemoveEventHandler(ResourceManagerDetail::TelemetryEventsHandler);
 }
+
+

@@ -44,10 +44,11 @@
 #  include <GLFW/glfw3.h>
 #endif
 
-#if EZ_ENABLED(EZ_PLATFORM_LINUX)
+#if EZ_ENABLED(EZ_PLATFORM_LINUX) || EZ_ENABLED(EZ_PLATFORM_ANDROID)
 #  include <errno.h>
 #  include <unistd.h>
 #endif
+
 
 EZ_DEFINE_AS_POD_TYPE(VkLayerProperties);
 
@@ -213,6 +214,8 @@ vk::Result ezGALDeviceVulkan::SelectInstanceExtensions(ezHybridArray<const char*
   }
 #elif defined(VK_USE_PLATFORM_WIN32_KHR)
   VK_SUCCEED_OR_RETURN_LOG(AddExtIfSupported(VK_KHR_WIN32_SURFACE_EXTENSION_NAME, m_extensions.m_bWin32Surface));
+#elif defined(VK_USE_PLATFORM_ANDROID_KHR)
+  VK_SUCCEED_OR_RETURN_LOG(AddExtIfSupported(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME, m_extensions.m_bAndroidSurface));
 #else
 #  error "Vulkan platform not supported"
 #endif
@@ -300,7 +303,7 @@ vk::Result ezGALDeviceVulkan::SelectDeviceExtensions(vk::DeviceCreateInfo& devic
     m_extensions.m_timelineSemaphoresEXT.timelineSemaphore = true;
   }
 
-#if EZ_ENABLED(EZ_PLATFORM_LINUX)
+#if EZ_ENABLED(EZ_PLATFORM_LINUX) || EZ_ENABLED(EZ_PLATFORM_ANDROID)
   AddExtIfSupported(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME, m_extensions.m_bExternalMemoryFd);
   AddExtIfSupported(VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME, m_extensions.m_bExternalSemaphoreFd);
 #elif EZ_ENABLED(EZ_PLATFORM_WINDOWS)
@@ -466,8 +469,8 @@ ezResult ezGALDeviceVulkan::InitPlatform()
     }
     if (m_transferQueue.m_uiQueueFamily == -1)
     {
-      ezLog::Error("No transfer queue found.");
-      return EZ_FAILURE;
+      ezLog::Warning("No transfer queue found.");
+      //return EZ_FAILURE;
     }
 
     constexpr float queuePriority = 0.f;
@@ -478,7 +481,8 @@ ezResult ezGALDeviceVulkan::InitPlatform()
     graphicsQueueCreateInfo.pQueuePriorities = &queuePriority;
     graphicsQueueCreateInfo.queueCount = 1;
     graphicsQueueCreateInfo.queueFamilyIndex = m_graphicsQueue.m_uiQueueFamily;
-    if (m_graphicsQueue.m_uiQueueFamily != m_transferQueue.m_uiQueueFamily)
+
+    if (m_graphicsQueue.m_uiQueueFamily != m_transferQueue.m_uiQueueFamily && m_transferQueue.m_uiQueueFamily != -1)
     {
       vk::DeviceQueueCreateInfo& transferQueueCreateInfo = queues.ExpandAndGetRef();
       transferQueueCreateInfo.pQueuePriorities = &queuePriority;
@@ -510,7 +514,11 @@ ezResult ezGALDeviceVulkan::InitPlatform()
 
     VK_SUCCEED_OR_RETURN_EZ_FAILURE(m_physicalDevice.createDevice(&deviceCreateInfo, nullptr, &m_device));
     m_device.getQueue(m_graphicsQueue.m_uiQueueFamily, m_graphicsQueue.m_uiQueueIndex, &m_graphicsQueue.m_queue);
-    m_device.getQueue(m_transferQueue.m_uiQueueFamily, m_transferQueue.m_uiQueueIndex, &m_transferQueue.m_queue);
+
+    if (m_graphicsQueue.m_uiQueueFamily != m_transferQueue.m_uiQueueFamily && m_transferQueue.m_uiQueueFamily != -1)
+    {
+      m_device.getQueue(m_transferQueue.m_uiQueueFamily, m_transferQueue.m_uiQueueIndex, &m_transferQueue.m_queue);
+    }
 
     m_dispatchContext.Init(*this);
   }
@@ -1375,7 +1383,7 @@ void ezGALDeviceVulkan::FillCapabilitiesPlatform()
   m_Capabilities.m_uiMaxPushConstantsSize = ezMath::Min(m_properties.limits.maxPushConstantsSize, (ezUInt32)ezMath::MaxValue<ezUInt16>());;
   m_Capabilities.m_bTextureArrays = true;
   m_Capabilities.m_bCubemapArrays = true;
-#if EZ_ENABLED(EZ_PLATFORM_LINUX)
+#if EZ_ENABLED(EZ_PLATFORM_LINUX) || EZ_ENABLED(EZ_PLATFORM_ANDROID)
   m_Capabilities.m_bSharedTextures = m_extensions.m_bTimelineSemaphore && m_extensions.m_bExternalMemoryFd && m_extensions.m_bExternalSemaphoreFd;
 #elif EZ_ENABLED(EZ_PLATFORM_WINDOWS)
   m_Capabilities.m_bSharedTextures = m_extensions.m_bTimelineSemaphore && m_extensions.m_bExternalMemoryWin32 && m_extensions.m_bExternalSemaphoreWin32;
@@ -1471,6 +1479,10 @@ void ezGALDeviceVulkan::WaitIdlePlatform()
   }
 }
 
+const ezGALDeviceVulkan::Extensions& ezGALDeviceVulkan::GetExtensions() const
+{
+  return m_extensions;
+}
 vk::PipelineStageFlags ezGALDeviceVulkan::GetSupportedStages() const
 {
   return m_supportedStages;
@@ -1512,7 +1524,7 @@ void ezGALDeviceVulkan::DeletePendingResources(ezDeque<PendingDeletion>& pending
       case vk::ObjectType::eUnknown:
         if (deletion.m_flags.IsSet(PendingDeletionFlags::IsFileDescriptor))
         {
-#if EZ_ENABLED(EZ_PLATFORM_LINUX)
+#if EZ_ENABLED(EZ_PLATFORM_LINUX) || EZ_ENABLED(EZ_PLATFORM_ANDROID)
           int fileDescriptor = static_cast<int>(reinterpret_cast<size_t>(deletion.m_pObject));
           int res = close(fileDescriptor);
           if (res == -1)

@@ -56,3 +56,5 @@ void ezFencePoolVulkan::ReclaimFence(vk::Fence& fence)
   EZ_ASSERT_DEBUG(s_device, "ezFencePoolVulkan::Initialize not called");
   s_Fences.PushBack(fence);
 }
+
+

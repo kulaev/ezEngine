@@ -58,3 +58,5 @@ void RemoveConsoleEventHandler()
 {
   ezTelemetry::AcceptMessagesForSystem('CMD', false);
 }
+
+

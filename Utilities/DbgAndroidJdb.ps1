@@ -1,0 +1,27 @@
+
+function RaiseError
+{
+	param(
+		[string]$msg
+	)
+	if($MessageBoxOnError)
+	{
+		[System.Windows.Forms.MessageBox]::Show($msg)
+	}
+	else
+	{
+		Write-Host $msg -foreground red
+	}
+	exit 1
+}
+
+$jdb = "$env:JAVA_HOME/bin/jdb.exe"
+if(-not (Test-Path $jdb))
+{
+	RaiseError "Failed to find jdb executable in $jdb. Please ensure taht the JAVA_HOME environment variable is correctly set."
+}
+$jdb = Resolve-Path $jdb
+
+Start-Process -FilePath "$env:comspec" -ArgumentList "/C `"`"$jdb`" -connect com.sun.jdi.SocketAttach:port=12345,hostname=localhost`"" -WindowStyle Hidden
+	
+

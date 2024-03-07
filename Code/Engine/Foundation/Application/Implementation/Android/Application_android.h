@@ -11,19 +11,20 @@ EZ_FOUNDATION_INTERNAL_HEADER
 class ezApplication;
 struct AInputEvent;
 
-class ezAndroidApplication
+class EZ_FOUNDATION_DLL ezAndroidApplication
 {
 public:
   ezAndroidApplication(struct android_app* pApp, ezApplication* pEzApp);
   ~ezAndroidApplication();
   void AndroidRun();
-  void HandleCmd(int32_t cmd);
+  void HandleCmd(struct android_app* pApp, int32_t cmd);
   int32_t HandleInput(AInputEvent* pEvent);
   void HandleIdent(ezInt32 iIdent);
 
 private:
   struct android_app* m_pApp;
   ezApplication* m_pEzApp;
+  bool m_bStarted = false;
 };
 
 #endif

@@ -56,3 +56,5 @@ void RemoveFileSystemEventHandler()
 {
   ezFileSystem::UnregisterEventHandler(FileSystemEventHandler);
 }
+
+

@@ -86,6 +86,11 @@ void ezGlobalLog::HandleLogMessage(const ezLoggingEventData& le)
     if ((ThisType > ezLogMsgType::None) && (ThisType < ezLogMsgType::All))
       s_uiMessageCount[ThisType].Increment();
 
+    if (s_LoggingEvent.IsEmpty())
+    {
+      ezStringBuilder stmp = le.m_sText;
+      ezLog::Print(stmp);
+    }
     s_LoggingEvent.Broadcast(le);
   }
 }
@@ -440,3 +445,5 @@ bool ezLog::Flush(ezUInt32 uiNumNewMsgThreshold, ezTime timeIntervalThreshold, e
 
   return true;
 }
+
+

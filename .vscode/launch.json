@@ -1,0 +1,156 @@
+{
+    "version" : "0.2.0",
+    "configurations" : [
+        {
+            "name": "Android lldb",
+            "type": "lldb",
+            "request": "custom",
+            "targetCreateCommands": [
+                "shell pwsh \"${workspaceRoot}/Utilities/DbgAndroidLldb.ps1\" -PackageName \"com.ezengine.ShaderExplorer\" -debugTemp \"${workspaceRoot}/debugtemp\" -apk \"${workspaceRoot}/Output/Bin/AndroidNinjaClangDebugArm64/ShaderExplorer.apk\" -MessageBoxOnError",
+                "command source ${workspaceRoot}/debugtemp/lldb.setup",
+            ],
+            "processCreateCommands":
+            [
+                "shell pwsh \"${workspaceRoot}/Utilities/DbgAndroidJdb.ps1\"",
+                "continue"
+            ]
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "Attach EditorEngineProcess",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/EditorEngineProcess",
+            "preRunCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ],
+            "preLaunchTask": "Debugger Attach Check"
+        },
+        {
+            "name": "Launch RendererTests Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/RendererTest",
+            "env": { 
+                "VK_ICD_FILENAMES": "/home/benjamin/mesa/install/share/vulkan/icd.d/lvp_icd.x86_64.json",
+                "VK_LAYER_PATH" : "/home/benjamin/vulkan-sdk-1.3.216.0/x86_64/etc/vulkan/explicit_layer.d",
+                "LD_LIBRARY_PATH" : "/home/benjamin/vulkan-sdk-1.3.216.0/x86_64/lib"
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        },
+        {
+            "name": "Launch FoundationTest Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/FoundationTest",
+            "env": {},
+            "args": [],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        },
+        {
+            "name": "Launch CoreTests Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/CoreTest",
+            "env": {},
+            "args": [],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        },
+        {
+            "name": "Launch Asteroids Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/Asteroids",
+            "env": {},
+            "args": [],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        },
+        {
+            "name": "Launch Player Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/Player",
+            "env": {},
+            "args": [ "-scene", "/home/benjamin/ezEngine/Data/Samples/Simple/AssetCache/Common/Scenes/Simple.ezObjectGraph", "-profile", "PC" ],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        },
+        {
+            "name": "Launch Inspector Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/Inspector",
+            "env": {},
+            "args": [],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        },
+        {
+            "name": "Launch Editor Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/Editor",
+            "env": { 
+                "VK_LAYER_PATH" : "/home/benjamin/vulkan-sdk-1.3.216.0/x86_64/etc/vulkan/explicit_layer.d",
+                "LD_LIBRARY_PATH" : "/home/benjamin/vulkan-sdk-1.3.216.0/x86_64/lib"
+            },
+            "args": [ "-debug" ],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        },
+        {
+            "name": "Launch Editor Debug (GDB)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/Editor",
+            "environment": [
+                { "name": "VK_LAYER_PATH", "value": "/home/benjamin/vulkan-sdk-1.3.216.0/x86_64/etc/vulkan/explicit_layer.d"},
+                { "name": "LD_LIBRARY_PATH", "value": "/home/benjamin/vulkan-sdk-1.3.216.0/x86_64/lib" }
+            ],
+            "args": [ "-debug" ],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64"
+        },
+        {
+            "name": "Launch DirectoryWatcherTest Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/DirectoryWatcherTest",
+            "env": {},
+            "args": [ "/home/benjamin/test" ],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        },
+        {
+            "name": "Launch IpcTest Server Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/IpcTest",
+            "env": {},
+            "args": [ "-server" ],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        },
+        {
+            "name": "Launch TexConv Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/TexConv",
+            "env": {},
+            "args": [ "-in0", "/home/benjamin/Pictures/Ship.png", "-out", "/home/benjamin/Ship.dds", "-rgb", "in0", "-compression", "High" ],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        },
+        {
+            "name": "Launch EditorEngineProcess Debug",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64/EditorEngineProcess",
+            "env": {},
+            "args": [ ],
+            "cwd": "${workspaceFolder}/Output/Bin/LinuxNinjaClangDebug64",
+            "initCommands": [ "command script import ${workspaceFolder}/Code/Engine/Foundation/ezEngine.py" ]
+        }
+    ]
+}

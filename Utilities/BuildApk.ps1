@@ -71,9 +71,12 @@ if($lastexitcode -ne 0)
 }
 
 Write-Host "Signing apk $finalApkPath with key $SignKey ..."
+Write-Host "apksigner:`"$apksigner`", SignKey:`"$SignKey`", SignPassword: `"$SignPassword`""
+
 & $apksigner sign --ks $SignKey --ks-pass $SignPassword $finalApkPath
 if($lastexitcode -ne 0)
 {
+    Write-Host "FAILED with $lastexitcode"
 	exit $lastexitcode
 }
 Write-Host "Done building apk $finalApkPath"

@@ -91,6 +91,7 @@ macro(ez_platformhook_find_vulkan)
 
     if(EZVULKAN_FOUND)
         if(EZ_CMAKE_ARCHITECTURE_64BIT)
+            message(WARNING "##### WINDOWS")
             add_library(EzVulkan::Loader STATIC IMPORTED)
             set_target_properties(EzVulkan::Loader PROPERTIES IMPORTED_LOCATION "${EZ_VULKAN_DIR}/Lib/vulkan-1.lib")
             set_target_properties(EzVulkan::Loader PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${EZ_VULKAN_DIR}/Include")

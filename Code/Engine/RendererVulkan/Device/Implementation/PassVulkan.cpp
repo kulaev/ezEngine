@@ -70,3 +70,5 @@ void ezGALPassVulkan::EndComputePlatform(ezGALComputeCommandEncoder* pCommandEnc
 
   m_pCommandEncoderImpl->EndCompute();
 }
+
+

@@ -129,5 +129,6 @@ EZ_STATICLINK_LIBRARY(RendererCore)
   EZ_STATICLINK_REFERENCE(RendererCore_Textures_Texture3DResource);
   EZ_STATICLINK_REFERENCE(RendererCore_Textures_TextureCubeResource);
   EZ_STATICLINK_REFERENCE(RendererCore_Textures_TextureLoader);
+  EZ_STATICLINK_REFERENCE(RendererCore_Utils_Implementation_CoreRenderProfile);
   EZ_STATICLINK_REFERENCE(RendererCore_Utils_Implementation_WorldGeoExtractionUtil);
 }
