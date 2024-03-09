@@ -107,7 +107,7 @@ PFN_vkQueueEndDebugUtilsLabelEXT vkQueueEndDebugUtilsLabelEXTFunc;
 PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXTFunc;
 PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXTFunc;
 PFN_vkCmdInsertDebugUtilsLabelEXT vkCmdInsertDebugUtilsLabelEXTFunc;
-
+PFN_vkGetPhysicalDeviceFeatures2 vkGetPhysicalDeviceFeatures2Func;
 
 VkResult vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pObjectName)
 {
@@ -142,6 +142,11 @@ void vkCmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer)
 void vkCmdInsertDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo)
 {
   return vkCmdInsertDebugUtilsLabelEXTFunc(commandBuffer, pLabelInfo);
+}
+
+void vkGetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2 * pFeatures)
+{
+  return vkGetPhysicalDeviceFeatures2Func(physicalDevice, pFeatures);
 }
 
 ezInternal::NewInstance<ezGALDevice> CreateVulkanDevice(ezAllocator* pAllocator, const ezGALDeviceCreationDescription& Description)
@@ -531,6 +536,7 @@ ezResult ezGALDeviceVulkan::InitPlatform()
   vkCmdBeginDebugUtilsLabelEXTFunc = (PFN_vkCmdBeginDebugUtilsLabelEXT)m_device.getProcAddr("vkCmdBeginDebugUtilsLabelEXT");
   vkCmdEndDebugUtilsLabelEXTFunc = (PFN_vkCmdEndDebugUtilsLabelEXT)m_device.getProcAddr("vkCmdEndDebugUtilsLabelEXT");
   vkCmdInsertDebugUtilsLabelEXTFunc = (PFN_vkCmdInsertDebugUtilsLabelEXT)m_device.getProcAddr("vkCmdInsertDebugUtilsLabelEXT");
+  vkGetPhysicalDeviceFeatures2Func = (PFN_vkGetPhysicalDeviceFeatures2)m_device.getProcAddr("vkGetPhysicalDeviceFeatures2");
 
 
   m_memoryProperties = m_physicalDevice.getMemoryProperties();
