@@ -62,7 +62,7 @@ EZ_BEGIN_STATIC_REFLECTED_TYPE(ezCodeEditorPreferences, ezNoBase, 1, ezRTTIDefau
 {
   EZ_BEGIN_PROPERTIES
   {
-    EZ_MEMBER_PROPERTY("CodeEditorPath", m_sEditorPath),
+    EZ_MEMBER_PROPERTY("CodeEditorPath", m_sEditorPath)->AddAttributes(new ezExternalFileBrowserAttribute("Select Editor", "*.exe"_ezsv)),
     EZ_MEMBER_PROPERTY("CodeEditorArgs", m_sEditorArgs)->AddAttributes(new ezDefaultValueAttribute("{file} {line}")),
   }
   EZ_END_PROPERTIES;
@@ -100,7 +100,8 @@ namespace
     ezProcessOptions po;
     po.AddArgument("--version");
     po.m_sProcess = sName;
-    po.m_onStdOut = [&sStdout](ezStringView out) { sStdout.Append(out); };
+    po.m_onStdOut = [&sStdout](ezStringView out)
+    { sStdout.Append(out); };
 
     if (ezProcess::Execute(po).Failed())
       return EZ_FAILURE;
@@ -307,12 +308,12 @@ ezStatus ezCppProject::OpenInCodeEditor(const ezStringView& sFileName, ezInt32 i
 
   const ezCppProject* preferences = ezPreferences::QueryPreferences<ezCppProject>();
   ezStringBuilder sFormatString = preferences->m_CodeEditorPreferences.m_sEditorArgs;
-  if(sFormatString.IsEmpty())
+  if (sFormatString.IsEmpty())
   {
     return ezStatus("Code editor is not configured");
   }
 
-  sFormatString.ReplaceAll("{line}",sLineNumber);
+  sFormatString.ReplaceAll("{line}", sLineNumber);
   sFormatString.ReplaceAll("{file}", sFileName);
 
   const QStringList args = QProcess::splitCommand(QString::fromUtf8(sFormatString.GetData()));
@@ -777,11 +778,13 @@ ezResult ezCppProject::CompileSolution(const ezCppSettings& cfg)
 #endif
   po.m_sWorkingDirectory = GetBuildDir(cfg);
   po.m_bHideConsoleWindow = true;
-  po.m_onStdOut = [&](ezStringView sText) {
+  po.m_onStdOut = [&](ezStringView sText)
+  {
     if (sText.FindSubString_NoCase("error") != nullptr)
       errors.PushBack(sText);
   };
-  po.m_onStdError = [&](ezStringView sText) {
+  po.m_onStdError = [&](ezStringView sText)
+  {
     if (sText.FindSubString_NoCase("error") != nullptr)
       errors.PushBack(sText);
   };
@@ -1085,7 +1088,8 @@ void ezCppProject::LoadPreferences()
           ezDynamicArray<ezFileStats> folders;
           ezOSFile::GatherAllItemsInFolder(folders, windowsSdkBinPath, ezFileSystemIteratorFlags::ReportFolders);
 
-          folders.Sort([](const ezFileStats& a, const ezFileStats& b) { return a.m_sName > b.m_sName; });
+          folders.Sort([](const ezFileStats& a, const ezFileStats& b)
+            { return a.m_sName > b.m_sName; });
 
           for (const ezFileStats& folder : folders)
           {
