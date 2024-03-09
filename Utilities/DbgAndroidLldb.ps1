@@ -1,5 +1,5 @@
 param(
-	[Parameter(Mandatory=$true)]
+	#[Parameter(Mandatory=$true)]
 	[string]$packageName,	
 	[string]$activityName = "android.app.NativeActivity",
 	[string]$debugTemp = "debugtemp",
@@ -10,56 +10,59 @@ param(
 )
 
 # Find ADB and JDB
-$adb = "$env:ANDROID_HOME\platform-tools\adb.exe"
-if(-not (Test-Path $adb))
-{
+$adb = "$env:ANDROID_HOME/platform-tools/adb"
+if ($IsWindows) {
+	$adb = "$adb.exe"
+}
+if (-not (Test-Path $adb)) {
 	RaiseError "Failed to find adb executable in $adb. Please ensure that the ANDROID_HOME environment variable is correctly set"
 }
-$jdb = "$env:JAVA_HOME\bin\jdb.exe"
-if(-not (Test-Path $jdb))
-{
+$adb = Resolve-Path $adb
+
+$jdb = "$env:JAVA_HOME/bin/jdb"
+if ($IsWindows) {
+	$jdb = "$jdb.exe"
+}
+if (-not (Test-Path $jdb)) {
 	RaiseError "Failed to find jdb executable in $jdb. Please ensure taht the JAVA_HOME environment variable is correctly set."
 }
 $jdb = Resolve-Path $jdb
 
-function RaiseError
-{
+$ErrorActionPreference = "Stop"
+if ($MessageBoxOnError -and $IsWindows) {
+	[System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") | Out-Null
+}
+
+function RaiseError {
 	param(
 		[string]$msg
 	)
-	if($MessageBoxOnError)
-	{
+	if ($MessageBoxOnError -and $IsWindows) {
 		[System.Windows.Forms.MessageBox]::Show($msg)
 	}
-	else
-	{
+	else {
 		Write-Host $msg -foreground red
 	}
 	exit 1
 }
 
-function Adb-Shell
-{
+function Adb-Shell {
 	param(
 		[string]$cmd,
 		[string]$failureMsg = ("Error executing adb shell command: {0}" -f $cmd)
 	)
-	if($PrintCmds)
-	{
+	if ($PrintCmds) {
 		Write-Host "Executing: adb shell" $cmd
 	}
-	try 
-	{
+	try {
 		$($result = (& $adb shell $cmd *>&1)) | Out-Null
 	}
-	catch
-	{
+	catch {
 		$callstack = Get-PSCallStack
 		$callstack = $callstack[1..$callstack.Length] | % { $res = "" } { $res += $_.toString() + "`n" } { $res }
 		RaiseError ("{0}`nOutput: {1}`n`nCallstack:`n{2}`n" -f $failureMsg, ($result | Out-String), $callstack)
 	}
-	if ($lastexitcode -ne 0)
-	{
+	if ($lastexitcode -ne 0) {
 		$callstack = Get-PSCallStack
 		$callstack = $callstack[1..$callstack.Length] | % { $res = "" } { $res += $_.toString() + "`n" } { $res }
 		RaiseError ("{0}`nOutput: {1}`n`nCallstack:`n{2}`n" -f $failureMsg, ($result | Out-String), $callstack)		
@@ -67,34 +70,29 @@ function Adb-Shell
 	return $result
 }
 
-function Adb-Cmd
-{
+function Adb-Cmd {
 	param(
 		[Parameter(
-		Mandatory=$True,
-		ValueFromRemainingArguments=$true,
-		Position = 0
+			Mandatory = $True,
+			ValueFromRemainingArguments = $true,
+			Position = 0
 		)][string[]]
 		$cmds
 	)
-	if($PrintCmds)
-	{
+	if ($PrintCmds) {
 		Write-Host "Executing: adb" $cmds
 	}
 	
 	$result = ""
 	$errorAction = $ErrorActionPreference
-	try
-	{
+	try {
 		$ErrorActionPreference = "Continue"
 		$result = (& $adb $cmds *>&1)
 	}
-	finally
-	{
+	finally {
 		$ErrorActionPreference = $errorAction
 	}
-	if ($lastexitcode -ne 0)
-	{
+	if ($lastexitcode -ne 0) {
 		$callstack = Get-PSCallStack
 		$callstack = $callstack[1..$callstack.Length] | % { $res = "" } { $res += $_.toString() + "`n" } { $res }
 		RaiseError ("Failed to execute adb {0}`nOutput: {1}`n`nCallstack:`n{2}`n" -f ($cmds -join " "), ($result -join "`n"), $callstack)	
@@ -102,22 +100,14 @@ function Adb-Cmd
 	return $result -join "`n"
 }
 
-$ErrorActionPreference = "Stop"
-if($MessageBoxOnError)
-{
-	[System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") | Out-Null
-}
-
 # Find arch
 $arch = Adb-Shell "getprop ro.product.cpu.abi"
-if(-not $arch)
-{
+if (-not $arch) {
 	RaiseError "Failed to determine architecture of target device"
 }
 
 #Ensure the debugtemp directory exists
-if(-not (Test-Path $debugTemp))
-{
+if (-not (Test-Path $debugTemp)) {
 	New-Item -Path $debugTemp -ItemType "directory" -Force
 }
 $debugTemp = Resolve-Path $debugTemp
@@ -126,22 +116,19 @@ $debugTemp = Resolve-Path $debugTemp
 $TEMP_DIR = "/data/local/tmp"
 $tempFiles = Adb-Shell "ls $TEMP_DIR"
 $filesPresent = (($tempFiles | Out-String) -match "lldb-server" -and ($tempFiles | Out-String) -match "start_lldb_server.sh")
-if (-not $filesPresent)
-{
+if (-not $filesPresent) {
 	# find the lldb-server executable
 	#$lldbServerLocalPath = "$env:ANDROID_NDK_HOME/prebuilt/android-${arch}/lldbserver/lldbserver"
 	$lldbLocalPath = "C:\Program Files\Android\Android Studio\plugins\android-ndk\resources\lldb\android"
 	$lldbServerLocalPath = "$lldbLocalPath/$arch/lldb-server"
 	$lldbStartLocalPath = "$lldbLocalPath/start_lldb_server.sh"
 
-	if(-not (Test-Path $lldbServerLocalPath))
-	{
+	if (-not (Test-Path $lldbServerLocalPath)) {
 		RaiseError "Could not find lldb-server in expected location: $lldbServerLocalPath. Please ensure that the ANDROID_NDK_HOME environment variable is correctly set."
 	}
 	$lldbServerLocalPath = Resolve-Path $lldbServerLocalPath
 
-	if(-not (Test-Path $lldbStartLocalPath))
-	{
+	if (-not (Test-Path $lldbStartLocalPath)) {
 		RaiseError "Could not find start_lldb_server.sh in expected location: $lldbStartLocalPath. Please ensure that the ANDROID_NDK_HOME environment variable is correctly set."
 	}
 	$lldbStartLocalPath = Resolve-Path $lldbStartLocalPath
@@ -151,10 +138,8 @@ if (-not $filesPresent)
 	Adb-Cmd push "$lldbStartLocalPath" $TEMP_DIR
 }
 
-if($apk)
-{
-	if(-not (Test-Path $apk))
-	{
+if ($apk) {
+	if (-not (Test-Path $apk)) {
 		RaiseError "Failed to find .apk in specified location: $apk."
 	}
 	Adb-Cmd install $apk
@@ -170,26 +155,21 @@ Write-Host "Application directory is $appDir"
 
 # Check if device is rooted or run-as works correctly
 $userIsRoot = (Adb-Shell "id") -match "root"
-if(-not $userIsRoot)
-{
+if (-not $userIsRoot) {
 	$runAsBroken = (Adb-Shell "run-as $packageName /system/bin/sh -c pwd") -match "unknown"
-	if($runAsBroken)
-	{
+	if ($runAsBroken) {
 		RaiseError "ERROR: your device has a broken run-as and is not rooted. Can not debug."
 	}
 }
 
 # Check if the lldb-server is still running from a previous session
 $lldbServerInfo = (Adb-Shell "ps") -match "lldb-server"
-if($lldbServerInfo)
-{
-	$lldbServerPid = ($lldbServerInfo -replace "\s+"," " -split " ")[1]
-	try
-	{
+if ($lldbServerInfo) {
+	$lldbServerPid = ($lldbServerInfo -replace "\s+", " " -split " ")[1]
+	try {
 		Adb-Shell "run-as $packageName kill $lldbServerPid"
 	}
-	catch
-	{
+	catch {
 		RaiseError "An lldb-server is still running and failed to kill. Please manually ensure that there is no lldb-server running."
 	}
 }
@@ -202,18 +182,16 @@ Adb-Shell "am start $packageName/$activityName"
 
 # Get the app PID
 $appInfo = (Adb-Shell "ps") -match $packageName
-$appPid = ($appInfo -replace "\s+"," " -split " ")[1]
-while(-not $appPid)
-{
+$appPid = ($appInfo -replace "\s+", " " -split " ")[1]
+while (-not $appPid) {
 	Write-Host "Waiting for app to start..."
 	Start-Sleep 1
 	$appInfo = (Adb-Shell "ps") -match $packageName
-	$appPid = ($appInfo -replace "\s+"," " -split " ")[1]
+	$appPid = ($appInfo -replace "\s+", " " -split " ")[1]
 }
 Write-Host "App PID is" $appPid
 
-if($StartLogcat)
-{
+if ($StartLogcat) {
 	Start-Process -FilePath "$env:comspec" -ArgumentList "/C adb logcat --pid=$appPid"
 }
 
@@ -223,22 +201,18 @@ Adb-Cmd forward tcp:12345 jdwp:$appPid
 # Copy required files from device
 $processExecutable = ""
 $libraryPath = "/system/lib"
-if($arch -match "64")
-{
+if ($arch -match "64") {
 	$processExecutable = Join-Path $debugTemp "app_process64"
 	Adb-Cmd pull "/system/bin/app_process64" $processExecutable
 	$libraryPath = "/system/lib64"
 	Adb-Cmd pull "/system/bin/linker64" "$debugTemp/linker64"
 }
-else
-{
-	if((Adb-Shell "ls /system/bin/app*" | Out-String) -match "app_process32")
-	{
+else {
+	if ((Adb-Shell "ls /system/bin/app*" | Out-String) -match "app_process32") {
 		$processExecutable = Join-Path $debugTemp "app_process32"
 		Adb-Cmd pull "/system/bin/app_process32" $processExecutable
 	}
-	else
-	{
+	else {
 		$processExecutable = Join-Path $debugTemp "app_process"
 		Adb-Cmd pull "/system/bin/app_process" $processExecutable
 	}
@@ -249,8 +223,7 @@ Adb-Cmd pull "$libraryPath/libc.so" "$debugTemp/libc.so"
 
 # Copy from tmp into app folder
 $lldbServerRemoteTestPath = $TEMP_DIR
-if($deviceApiLevel -ge 23)
-{
+if ($deviceApiLevel -ge 23) {
 	$lldbServerRemoteTestPath = "$appDir"
 }
 
@@ -262,7 +235,10 @@ Adb-Shell "cat ${TEMP_DIR}/lldb-server | run-as ${packageName} sh -c 'cat > ${LL
 Adb-Shell "cat ${TEMP_DIR}/start_lldb_server.sh | run-as ${packageName} sh -c 'cat > ${LLDB_DIR}/bin/start_lldb_server.sh && chmod 700 ${LLDB_DIR}/bin/start_lldb_server.sh'"
 
 # Start lldbserver
-Start-Process -FilePath "$env:comspec" -ArgumentList "/C `"$adb shell run-as ${packageName} ${LLDB_DIR}/bin/start_lldb_server.sh ${LLDB_DIR} unix-abstract /${packageName} debug.socket `"lldb process:gdb-remote packets`"" -WindowStyle Hidden
+#Start-Process -FilePath pwsh -ArgumentList "/C `"$adb shell run-as ${packageName} ${LLDB_DIR}/bin/start_lldb_server.sh ${LLDB_DIR} unix-abstract /${packageName} debug.socket `"lldb process:gdb-remote packets`"" #-WindowStyle Hidden
+
+adb shell "run-as ${packageName} ${LLDB_DIR}/bin/start_lldb_server.sh ${LLDB_DIR} unix-abstract /${packageName} debug.socket `"lldb process:gdb-remote packets`"" &
+
 
 # Generate lldb config
 $lldbConfig = "platform select remote-android`n"

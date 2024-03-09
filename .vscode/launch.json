@@ -1,6 +1,7 @@
 {
     "version" : "0.2.0",
     "configurations" : [
+        
         {
             "name": "Android lldb",
             "type": "lldb",
@@ -11,7 +12,7 @@
             ],
             "processCreateCommands":
             [
-                "shell pwsh \"${workspaceRoot}/Utilities/DbgAndroidJdb.ps1\"",
+                "shell pwsh \"${workspaceRoot}/Utilities/DbgAndroidJdb.ps1\" &",
                 "continue"
             ]
         },

@@ -359,3 +359,7 @@ AssetCache
 Code/Engine/ezBuildInfo.h
 cmake-build-debug-visual-studio
 workspace-clang
+
+/build-debug/
+/cmake-build-debug/
+/linux-debug/
