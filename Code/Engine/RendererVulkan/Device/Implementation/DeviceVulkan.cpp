@@ -108,6 +108,7 @@ PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXTFunc;
 PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXTFunc;
 PFN_vkCmdInsertDebugUtilsLabelEXT vkCmdInsertDebugUtilsLabelEXTFunc;
 PFN_vkGetPhysicalDeviceFeatures2 vkGetPhysicalDeviceFeatures2Func;
+PFN_vkGetPhysicalDeviceFeatures2KHR vkGetPhysicalDeviceFeatures2KHRFunc;
 
 VkResult vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pObjectName)
 {
@@ -144,8 +145,13 @@ void vkCmdInsertDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugU
   return vkCmdInsertDebugUtilsLabelEXTFunc(commandBuffer, pLabelInfo);
 }
 
-void vkGetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2 * pFeatures)
+void vkGetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2* pFeatures)
 {
+  EZ_ASSERT_DEV(vkGetPhysicalDeviceFeatures2KHRFunc != nullptr || vkGetPhysicalDeviceFeatures2Func != nullptr, "");
+  if (vkGetPhysicalDeviceFeatures2KHRFunc != nullptr)
+  {
+    return vkGetPhysicalDeviceFeatures2KHRFunc(physicalDevice, pFeatures);
+  }
   return vkGetPhysicalDeviceFeatures2Func(physicalDevice, pFeatures);
 }
 
@@ -196,8 +202,10 @@ vk::Result ezGALDeviceVulkan::SelectInstanceExtensions(ezHybridArray<const char*
   }
 
   // Add a specific extension to the list of extensions to be enabled, if it is supported.
-  auto AddExtIfSupported = [&](const char* extensionName, bool& enableFlag) -> vk::Result {
-    auto it = std::find_if(begin(extensionProperties), end(extensionProperties), [&](const vk::ExtensionProperties& prop) { return ezStringUtils::IsEqual(prop.extensionName.data(), extensionName); });
+  auto AddExtIfSupported = [&](const char* extensionName, bool& enableFlag) -> vk::Result
+  {
+    auto it = std::find_if(begin(extensionProperties), end(extensionProperties), [&](const vk::ExtensionProperties& prop)
+      { return ezStringUtils::IsEqual(prop.extensionName.data(), extensionName); });
     if (it != end(extensionProperties))
     {
       extensions.PushBack(extensionName);
@@ -247,8 +255,10 @@ vk::Result ezGALDeviceVulkan::SelectDeviceExtensions(vk::DeviceCreateInfo& devic
   }
 
   // Add a specific extension to the list of extensions to be enabled, if it is supported.
-  auto AddExtIfSupported = [&](const char* extensionName, bool& enableFlag) -> vk::Result {
-    auto it = std::find_if(begin(extensionProperties), end(extensionProperties), [&](const vk::ExtensionProperties& prop) { return ezStringUtils::IsEqual(prop.extensionName.data(), extensionName); });
+  auto AddExtIfSupported = [&](const char* extensionName, bool& enableFlag) -> vk::Result
+  {
+    auto it = std::find_if(begin(extensionProperties), end(extensionProperties), [&](const vk::ExtensionProperties& prop)
+      { return ezStringUtils::IsEqual(prop.extensionName.data(), extensionName); });
     if (it != end(extensionProperties))
     {
       extensions.PushBack(extensionName);
@@ -261,6 +271,12 @@ vk::Result ezGALDeviceVulkan::SelectDeviceExtensions(vk::DeviceCreateInfo& devic
   };
 
   VK_SUCCEED_OR_RETURN_LOG(AddExtIfSupported(VK_KHR_SWAPCHAIN_EXTENSION_NAME, m_extensions.m_bDeviceSwapChain));
+#if EZ_ENABLED(EZ_PLATFORM_ANDROID)
+  // On android we don't require Vulkan 1.1, so instead we require VK_KHR_maintenance1 so we have the same feature set we need.
+  bool bMaintenance = false;
+  VK_SUCCEED_OR_RETURN_LOG(AddExtIfSupported(VK_KHR_MAINTENANCE1_EXTENSION_NAME, bMaintenance));
+#endif
+
   AddExtIfSupported(VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME, m_extensions.m_bShaderViewportIndexLayer);
 
   vk::PhysicalDeviceFeatures2 features;
@@ -328,11 +344,15 @@ ezResult ezGALDeviceVulkan::InitPlatform()
   const char* layers[] = {"VK_LAYER_KHRONOS_validation"};
   {
     // Create instance
-    // We use Vulkan 1.1 because of two features:
-    // 1. Descriptor set pools return vk::Result::eErrorOutOfPoolMemory if exhaused. Removing the requirement to count usage yourself.
+    // We either have to use Vulkan 1.1 or require VK_KHR_maintenance1 because of two features:
+    // 1. Descriptor set pools return vk::Result::eErrorOutOfPoolMemory if exhausted. Removing the requirement to count usage yourself.
     // 2. Viewport height can be negative which performs y-inversion of the clip-space to framebuffer-space transform.
     vk::ApplicationInfo applicationInfo = {};
+#if EZ_ENABLED(EZ_PLATFORM_ANDROID)
+    applicationInfo.apiVersion = VK_API_VERSION_1_0;
+#else
     applicationInfo.apiVersion = VK_API_VERSION_1_1;
+#endif
     applicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0); // TODO put ezEngine version here
     applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);      // TODO put ezEngine version here
     applicationInfo.pApplicationName = "ezEngine";
@@ -475,7 +495,7 @@ ezResult ezGALDeviceVulkan::InitPlatform()
     if (m_transferQueue.m_uiQueueFamily == -1)
     {
       ezLog::Warning("No transfer queue found.");
-      //return EZ_FAILURE;
+      // return EZ_FAILURE;
     }
 
     constexpr float queuePriority = 0.f;
@@ -494,6 +514,9 @@ ezResult ezGALDeviceVulkan::InitPlatform()
       transferQueueCreateInfo.queueCount = 1;
       transferQueueCreateInfo.queueFamilyIndex = m_transferQueue.m_uiQueueFamily;
     }
+
+    vkGetPhysicalDeviceFeatures2Func = (PFN_vkGetPhysicalDeviceFeatures2)m_instance.getProcAddr("vkGetPhysicalDeviceFeatures2");
+    vkGetPhysicalDeviceFeatures2KHRFunc = (PFN_vkGetPhysicalDeviceFeatures2KHR)m_instance.getProcAddr("vkGetPhysicalDeviceFeatures2KHR");
 
     // #TODO_VULKAN test that this returns the same as 'layers' passed into the instance.
     ezUInt32 uiLayers;
@@ -528,16 +551,14 @@ ezResult ezGALDeviceVulkan::InitPlatform()
     m_dispatchContext.Init(*this);
   }
 
-  VK_SUCCEED_OR_RETURN_EZ_FAILURE(ezMemoryAllocatorVulkan::Initialize(m_physicalDevice, m_device, m_instance));
-
   vkSetDebugUtilsObjectNameEXTFunc = (PFN_vkSetDebugUtilsObjectNameEXT)m_device.getProcAddr("vkSetDebugUtilsObjectNameEXT");
   vkQueueBeginDebugUtilsLabelEXTFunc = (PFN_vkQueueBeginDebugUtilsLabelEXT)m_device.getProcAddr("vkQueueBeginDebugUtilsLabelEXT");
   vkQueueEndDebugUtilsLabelEXTFunc = (PFN_vkQueueEndDebugUtilsLabelEXT)m_device.getProcAddr("vkQueueEndDebugUtilsLabelEXT");
   vkCmdBeginDebugUtilsLabelEXTFunc = (PFN_vkCmdBeginDebugUtilsLabelEXT)m_device.getProcAddr("vkCmdBeginDebugUtilsLabelEXT");
   vkCmdEndDebugUtilsLabelEXTFunc = (PFN_vkCmdEndDebugUtilsLabelEXT)m_device.getProcAddr("vkCmdEndDebugUtilsLabelEXT");
   vkCmdInsertDebugUtilsLabelEXTFunc = (PFN_vkCmdInsertDebugUtilsLabelEXT)m_device.getProcAddr("vkCmdInsertDebugUtilsLabelEXT");
-  vkGetPhysicalDeviceFeatures2Func = (PFN_vkGetPhysicalDeviceFeatures2)m_device.getProcAddr("vkGetPhysicalDeviceFeatures2");
 
+  VK_SUCCEED_OR_RETURN_EZ_FAILURE(ezMemoryAllocatorVulkan::Initialize(m_physicalDevice, m_device, m_instance));
 
   m_memoryProperties = m_physicalDevice.getMemoryProperties();
 
@@ -566,7 +587,9 @@ ezResult ezGALDeviceVulkan::InitPlatform()
 
   m_pDefaultPass = EZ_NEW(&m_Allocator, ezGALPassVulkan, *this);
 
-  ezGALWindowSwapChain::SetFactoryMethod([this](const ezGALWindowSwapChainCreationDescription& desc) -> ezGALSwapChainHandle { return CreateSwapChain([this, &desc](ezAllocator* pAllocator) -> ezGALSwapChain* { return EZ_NEW(pAllocator, ezGALSwapChainVulkan, desc); }); });
+  ezGALWindowSwapChain::SetFactoryMethod([this](const ezGALWindowSwapChainCreationDescription& desc) -> ezGALSwapChainHandle
+    { return CreateSwapChain([this, &desc](ezAllocator* pAllocator) -> ezGALSwapChain*
+        { return EZ_NEW(pAllocator, ezGALSwapChainVulkan, desc); }); });
 
   return EZ_SUCCESS;
 }
@@ -618,7 +641,8 @@ void ezGALDeviceVulkan::UploadTextureStaging(ezStagingBufferPoolVulkan* pStaging
   const vk::Offset3D imageOffset = {0, 0, 0};
   const vk::Extent3D imageExtent = pTexture->GetMipLevelSize(subResource.mipLevel);
 
-  auto getRange = [](const vk::ImageSubresourceLayers& layers) -> vk::ImageSubresourceRange {
+  auto getRange = [](const vk::ImageSubresourceLayers& layers) -> vk::ImageSubresourceRange
+  {
     vk::ImageSubresourceRange range;
     range.aspectMask = layers.aspectMask;
     range.baseMipLevel = layers.mipLevel;
@@ -1386,7 +1410,8 @@ void ezGALDeviceVulkan::FillCapabilitiesPlatform()
   m_Capabilities.m_b32BitIndices = true;
   m_Capabilities.m_bIndirectDraw = true;
   m_Capabilities.m_uiMaxConstantBuffers = ezMath::Min(m_properties.limits.maxDescriptorSetUniformBuffers, (ezUInt32)ezMath::MaxValue<ezUInt16>());
-  m_Capabilities.m_uiMaxPushConstantsSize = ezMath::Min(m_properties.limits.maxPushConstantsSize, (ezUInt32)ezMath::MaxValue<ezUInt16>());;
+  m_Capabilities.m_uiMaxPushConstantsSize = ezMath::Min(m_properties.limits.maxPushConstantsSize, (ezUInt32)ezMath::MaxValue<ezUInt16>());
+  ;
   m_Capabilities.m_bTextureArrays = true;
   m_Capabilities.m_bCubemapArrays = true;
 #if EZ_ENABLED(EZ_PLATFORM_LINUX) || EZ_ENABLED(EZ_PLATFORM_ANDROID)
@@ -1712,7 +1737,8 @@ void ezGALDeviceVulkan::FillFormatLookupTable()
 
   m_FormatLookupTable.SetFormatInfo(ezGALResourceFormat::AUByteNormalized, ezGALFormatLookupEntryVulkan(vk::Format::eR8Unorm));
 
-  auto SelectDepthFormat = [&](const std::vector<vk::Format>& list) -> vk::Format {
+  auto SelectDepthFormat = [&](const std::vector<vk::Format>& list) -> vk::Format
+  {
     for (auto& format : list)
     {
       vk::FormatProperties formatProperties;
@@ -1723,7 +1749,8 @@ void ezGALDeviceVulkan::FillFormatLookupTable()
     return vk::Format::eUndefined;
   };
 
-  auto SelectStorageFormat = [](vk::Format depthFormat) -> vk::Format {
+  auto SelectStorageFormat = [](vk::Format depthFormat) -> vk::Format
+  {
     switch (depthFormat)
     {
       case vk::Format::eD16Unorm:
