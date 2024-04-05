@@ -11,7 +11,7 @@ o
 		s %AssetType{"Scene"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{14156501856797205539,10398819186738443508}}
-		u4 %Hash{12950660886204701598}
+		u4 %Hash{4785549044785741908}
 		VarArray %MetaInfo{}
 		VarArray %Outputs{}
 		VarArray %PackageDeps
@@ -21,7 +21,7 @@ o
 			s{"{ 22424715-9424-489b-93c0-a491714b6b77 }"}
 			s{"{ 4795f5c4-4a78-4c13-937e-cf3e6bdecb7c }"}
 			s{"{ 618ee743-ed04-4fac-bf5f-572939db2f1d }"}
-			s{"{ 8044a36f-e313-4204-973d-796231798973 }"}
+			s{"{ cd62149a-5812-44fc-a00c-29c09ee8fef2 }"}
 			s{"{ e47f405c-c961-8be9-1a93-3768b4d7d487 }"}
 		}
 		VarArray %References
@@ -190,7 +190,7 @@ o
 	{
 		b %Active{1}
 		VarDict %Parameters{}
-		s %PlayerPrefab{"{ 8044a36f-e313-4204-973d-796231798973 }"}
+		s %PlayerPrefab{"{ cd62149a-5812-44fc-a00c-29c09ee8fef2 }"}
 	}
 }
 o
