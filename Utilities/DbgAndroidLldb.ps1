@@ -166,13 +166,15 @@ if (-not $userIsRoot) {
 }
 
 # Check if the lldb-server is still running from a previous session
-$lldbServerInfo = (Adb-Shell "pidof lldb-server")
-$lldbServerPids = $lldbServerInfo.Split(" ")
-if ($lldbServerPids) {
-	foreach ($lldbServerPid in $lldbServerPids) {
-		# Ignore results as there might be multiple instances running from other packages.
-		adb shell run-as $packageName kill $lldbServerPid
-	}	
+$lldbServerInfo = adb shell pidof lldb-server
+if ($null -ne $lldbServerInfo) {
+	$lldbServerPids = $lldbServerInfo.Split(" ")
+	if ($lldbServerPids) {
+		foreach ($lldbServerPid in $lldbServerPids) {
+			# Ignore results as there might be multiple instances running from other packages.
+			adb shell run-as $packageName kill $lldbServerPid
+		}	
+	}
 }
 
 # Tell the java application to wait for an java debugger

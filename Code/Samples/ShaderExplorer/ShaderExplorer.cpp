@@ -24,7 +24,7 @@
 
 static ezUInt32 g_uiWindowWidth = 640;
 static ezUInt32 g_uiWindowHeight = 480;
-static bool g_bWindowResized = false;
+static ezInt32 g_bWindowResized = 0;
 
 class ezShaderExplorerWindow : public ezWindow
 {
@@ -47,7 +47,7 @@ public:
     {
       g_uiWindowWidth = newWindowSize.width;
       g_uiWindowHeight = newWindowSize.height;
-      g_bWindowResized = true;
+      g_bWindowResized = 4;
     }
   }
 
@@ -62,11 +62,13 @@ ezShaderExplorerApp::ezShaderExplorerApp()
 ezApplication::Execution ezShaderExplorerApp::Run()
 {
   m_pWindow->ProcessWindowMessages();
-
-  if (g_bWindowResized)
+  if (g_bWindowResized > 0)
   {
-    g_bWindowResized = false;
-    UpdateSwapChain();
+    --g_bWindowResized;
+    if (g_bWindowResized == 0)
+    {
+      UpdateSwapChain();
+    }
   }
 
   if (m_pWindow->m_bCloseRequested || ezInputManager::GetInputActionState("Main", "CloseApp") == ezKeyState::Pressed)
@@ -439,7 +441,8 @@ void ezShaderExplorerApp::UpdateSwapChain()
   }
   else
   {
-    m_pDevice->UpdateSwapChain(m_hSwapChain, ezGALPresentMode::VSync).IgnoreResult();
+    m_pDevice->UpdateSwapChain(m_hSwapChain, ezGALPresentMode::VSync).AssertSuccess();
+    m_pDevice->UpdateSwapChain(m_hSwapChain, ezGALPresentMode::VSync).AssertSuccess();
   }
 
   if (!m_hSwapChain.IsInvalidated())
