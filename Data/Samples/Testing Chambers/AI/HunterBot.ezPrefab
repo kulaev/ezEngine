@@ -11,7 +11,7 @@ o
 		s %AssetType{"Prefab"}
 		VarArray %Dependencies{}
 		Uuid %DocumentID{u4{13485381193864128443,5404927337037042169}}
-		u4 %Hash{7213800535061034803}
+		u4 %Hash{7416123006065606378}
 		VarArray %MetaInfo
 		{
 			Uuid{u4{14055307794492218014,17644537402827956844}}
@@ -75,7 +75,7 @@ o
 			Uuid{u4{18432750149148919605,991677920728630792}}
 		}
 		s %GlobalKey{""}
-		Vec3 %LocalPosition{f{0xCECC4C3E,0x9A9999BE,0}}
+		Vec3 %LocalPosition{f{0xCECC4C3E,0x9A9999BE,0xCDCCCCBD}}
 		Quat %LocalRotation{f{0,0,0,0x0000803F}}
 		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
 		f %LocalUniformScaling{0x0000803F}
@@ -282,7 +282,7 @@ o
 			Uuid{u4{619052691596191452,6214179327665191073}}
 		}
 		s %GlobalKey{""}
-		Vec3 %LocalPosition{f{0xCDCC4CBE,0x000000BF,0}}
+		Vec3 %LocalPosition{f{0xCDCC4CBE,0x000000BF,0xCDCCCCBD}}
 		Quat %LocalRotation{f{0,0,0,0x0000803F}}
 		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
 		f %LocalUniformScaling{0x0000803F}
@@ -308,7 +308,7 @@ o
 			Uuid{u4{7299264030247198146,6220820090813152626}}
 		}
 		s %GlobalKey{""}
-		Vec3 %LocalPosition{f{0xCECC4C3E,0x9A99993E,0}}
+		Vec3 %LocalPosition{f{0xCECC4C3E,0x9A99993E,0xCDCCCCBD}}
 		Quat %LocalRotation{f{0,0,0,0x0000803F}}
 		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
 		f %LocalUniformScaling{0x0000803F}
@@ -433,7 +433,7 @@ o
 			Uuid{u4{14275815254588383501,704515120781213218}}
 		}
 		s %GlobalKey{""}
-		Vec3 %LocalPosition{f{0,0,0}}
+		Vec3 %LocalPosition{f{0,0,0xCDCCCCBD}}
 		Quat %LocalRotation{f{0,0,0,0x0000803F}}
 		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
 		f %LocalUniformScaling{0x0000803F}
@@ -487,7 +487,7 @@ o
 			Uuid{u4{7932310646404021609,11443321497749712907}}
 		}
 		s %GlobalKey{""}
-		Vec3 %LocalPosition{f{0xCDCC4CBE,0x0000003F,0}}
+		Vec3 %LocalPosition{f{0xCDCC4CBE,0x0000003F,0xCDCCCCBD}}
 		Quat %LocalRotation{f{0,0,0,0x0000803F}}
 		Vec3 %LocalScaling{f{0x0000803F,0x0000803F,0x0000803F}}
 		f %LocalUniformScaling{0x0000803F}
